@@ -1,0 +1,42 @@
+@page "/create-product-stock/{productId:int}"
+
+@using WebShop.Domain.Entities
+@* @inject ProductService ProductService *@
+@* @inject ProductStockService ProductStockService *@
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudPage Title="Add Product Stock">
+    <MudForm>
+        <MudNumericField @bind-Value="_quantity" Min="1" Max="10" Label="Quantity" Required="true" />
+        <MudNumericField @bind-Value="_weightKg" Min="0" Label="Weight" Required="true" />
+        <MudDatePicker @bind-Date="_expirationDate" Label="Expiration Date" Required="true" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProductStock">Add Product Stock</MudButton>
+    </MudForm>
+</MudPage>
+
+@code {
+    [Parameter]
+    public int ProductId { get; set; }
+
+    private int _quantity = 1;
+    private decimal? _weightKg;
+    private DateTime? _expirationDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //var product = await ProductService.GetProductByIdAsync(ProductId);
+    }
+
+    private async Task AddProductStock()
+    {
+        //var newProductStock = new ProductStock(_expirationDate, _weightKg, /* other properties */, productId);
+
+        //await ProductStockService.AddProductStockAsync(newProductStock);
+        
+        Snackbar.Add("Product stock added successfully", Severity.Success);
+ 
+        NavigationManager.NavigateTo("/products");
+    }
+}
