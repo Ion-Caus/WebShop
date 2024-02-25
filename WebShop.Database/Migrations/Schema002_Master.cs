@@ -25,7 +25,6 @@ CREATE TABLE [dbo].[Categories] (
 
 CREATE TABLE [dbo].[Products] (
     [Id] INT IDENTITY NOT NULL,
-    [ProductId] UNIQUEIDENTIFIER NOT NULL,
     [Name] NVARCHAR(250) NOT NULL,
     [Description] NVARCHAR(MAX) NOT NULL,
     [PricePerKg] DECIMAL(18, 5) NOT NULL,
@@ -33,7 +32,6 @@ CREATE TABLE [dbo].[Products] (
     [ImageUrl] NVARCHAR(MAX) NULL,
     [CategoryId] INT NOT NULL,
     CONSTRAINT [PK_Products] PRIMARY KEY ([Id]),
-    CONSTRAINT [UQ_Products_ProductId] UNIQUE ([ProductId]),
     CONSTRAINT [FK_Products_Categories_CategoryId] FOREIGN KEY ([CategoryId]) REFERENCES [dbo].[Categories] ([Id])
 );
 

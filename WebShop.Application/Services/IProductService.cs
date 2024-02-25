@@ -6,4 +6,5 @@ namespace WebShop.Application.Services;
 public interface IProductService
 {
     Task<Product> CreateProduct(CreateProductDto dto);
+    Task<IReadOnlyCollection<ProductDto>> GetProducts();
 }

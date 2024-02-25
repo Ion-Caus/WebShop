@@ -1,3 +1,4 @@
+using MudBlazor;
 using MudBlazor.Services;
 using Serilog;
 using WebShop.Application.Services;
@@ -17,7 +18,18 @@ builder.Logging.AddSerilog();
 
 #region Blazor
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+
+    config.SnackbarConfiguration.PreventDuplicates = false;
+    config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 10000;
+    config.SnackbarConfiguration.HideTransitionDuration = 500;
+    config.SnackbarConfiguration.ShowTransitionDuration = 500;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 
 builder.Services.AddTransient<IUserProfileService, StaticUserProfileService>();
 #endregion
@@ -33,6 +45,7 @@ builder.Services.AddWebShopDbContext(connectionString);
 
 #region Services
 builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddTransient<IMasterDataHelper, MasterDataHelper>();
 #endregion
 
 var app = builder.Build();
@@ -40,7 +53,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

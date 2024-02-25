@@ -8,11 +8,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddWebShopDbContext(this IServiceCollection services, string connectionString)
     {
-        services.AddSingleton<WebShopDbContext>(p =>
-        {
-            
-            return new WebShopDbContext(connectionString, new DbContextOptions<WebShopDbContext>());
-        });
+        services.AddSingleton<WebShopDbContext>(p => new WebShopDbContext(connectionString, new DbContextOptions<WebShopDbContext>()));
 
         return services;
     }

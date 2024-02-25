@@ -1,10 +1,11 @@
-@page "/create-product-stock/{productId:int}"
+@page "/add-product-stock/{productId:int}"
 
-@using WebShop.Domain.Entities
 @* @inject ProductService ProductService *@
 @* @inject ProductStockService ProductStockService *@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
+
+<PageTitle> Add product stock </PageTitle>
 
 <MudPage Title="Add Product Stock">
     <MudForm>

@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,8 @@ public class WebShopDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.Entity<Product>(table =>
         {
             table.HasOne(p => p.Category);
+            table.HasOne(p => p.Image);
+            
             table.OwnsOne(x => x.PricePerKg, info =>
             {
                 info.Property(p => p.Value).HasColumnName("PricePerKg");
@@ -78,6 +81,7 @@ public class WebShopDbContext : Microsoft.EntityFrameworkCore.DbContext
     //public DbSet<Order> Orders { get; set; }
     //public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<Image> Images { get; set; }
     //public DbSet<ProductStock> ProductStocks { get; set; }
     //public DbSet<Warehouse> Warehouses { get; set; }
     

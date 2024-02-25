@@ -3,62 +3,211 @@
 @using WebShop.Application.Services
 @using WebShop.Application.Dtos
 @using WebShop.Domain.ValueObjects
+@using WebShop.Web.Helpers
 @using WebShop.Web.Models
 @using WebShop.Web.Services
+
 @inject IProductService ProductService
+@inject IMasterDataHelper MasterDataHelper
+
 @inject NavigationManager NavigationManager
 @inject IUserProfileService UserProfileService
 @inject ISnackbar Snackbar
 
-<MudPage Title="Create Product">
-    <MudForm>
-        <MudTextField @bind-Value="_productName" Label="Product Name" Required="true" />
-        <MudTextField @bind-Value="_productDescription" Label="Product Description" Required="true" />
+<PageTitle> Create new product </PageTitle>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProduct">Create Product</MudButton>
-    </MudForm>
-</MudPage>
+<MudCard>
+	<MudForm Model="@_model" @ref="@_form" Validation="@(_productValidator.ValidateValue)" ValidationDelay="0">
+		<MudCardContent>
+				<MudTextField @bind-Value="_model.Name"                              
+							  For="@(() => _model.Name)"
+							  Variant="Variant.Outlined"
+							  Immediate="true"
+							  Label="Name" />
 
-@code {
-    private string? _productName;
-    private string? _productDescription;
-    private decimal? _productPrice = 1;
-    private string? _currencyCode;
-    private string? _productCategory = "Fish";
+				<MudTextField @bind-Value="_model.Description"
+				              For="@(() => _model.Description)"
+				              Variant="Variant.Outlined"
+				              Immediate="true"
+				              Lines="5"
+				              Label="Description" />
 
+				<MudNumericField @bind-Value="_model.PricePerKg"
+				                 For="@(() => _model.PricePerKg)"
+				                 Variant="Variant.Outlined"
+				                 HideSpinButtons="true"
+				                 Step="10m"
+				                 Immediate="true"
+				                 Label="Price per kilogram" />
+				
+				<MudSelect @bind-Value="_model.CurrencyCode"
+				           For="@(() => _model.CurrencyCode)" 
+				           Variant="Variant.Outlined"
+				           Immediate="true"
+				           Label="Currency">
+                    @foreach (var currencyCode in _currencyCodes)
+                    {
+                        <MudSelectItem Value="@currencyCode">@currencyCode</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect @bind-Value="_model.Category"
+                           For="@(() => _model.Category)" 
+                           Variant="Variant.Outlined"
+                           Immediate="true"
+                           Label="Category">
+                    @foreach (var category in _categories)
+                    {
+                        <MudSelectItem Value="@category.Name">@category.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <MudFileUpload T="IBrowserFile"
+                               OnFilesChanged="OnInputFileChanged"
+                               Hidden="@false"
+                               InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20"
+                               InputStyle="opacity:0"
+                               Accept=".png, .jpg" MaximumFileCount="1"
+                               For="@(() => _model.Image!)"
+                               @ondragenter="@SetDragClass"
+                               @ondragleave="@ClearDragClass"
+                               @ondragend="@ClearDragClass">
+                    <ButtonTemplate>
+                        <MudPaper Height="300px"
+                                  Outlined="true"
+                                  Class="@_dragClass">
+                            <MudText Typo="Typo.h6">
+                                Drag and drop the image here or click
+                            </MudText>
+                            @if (_model.ImageName is not null)
+                            {
+                                <MudChip Color="Color.Dark" Text="@_model.ImageName" />
+                            }
+                        </MudPaper>
+                        <MudToolBar DisableGutters="true"
+                                    Class="relative d-flex justify-end gap-4 z-30">
+                            <MudButton HtmlTag="label"
+                                       Color="Color.Primary"
+                                       for="@context.Id"
+                                       Variant="Variant.Filled">
+                                Open file picker
+                            </MudButton>
+                    
+                            <MudButton OnClick="@Clear"
+                                       Color="Color.Error"
+                                       Disabled="@(@_model.ImageName is null)"
+                                       Variant="Variant.Filled">
+                                Clear
+                            </MudButton>
+                        </MudToolBar>
+                    </ButtonTemplate>
+                </MudFileUpload>
+        </MudCardContent>
+	</MudForm>
+    <MudCardActions>
+         <MudButton Disabled="@_processing" OnClick="CreateProduct" Variant="Variant.Filled" Color="Color.Primary">
+            @if (_processing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Create product</MudText>
+            }
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code { 
+    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+    private string _dragClass = DefaultDragClass;
+    
+    private readonly ProductForm _model = new();
+    private readonly ProductFormFluentValidator _productValidator = new();
+
+    private MudForm _form = null!;
+
+    private bool _processing;
     private UserSettings? _userSettings;
 
-    protected override void OnInitialized()
+    private IReadOnlyCollection<string> _currencyCodes = new[] { "MDL" };
+    private IReadOnlyCollection<CategoryDto> _categories = Array.Empty<CategoryDto>();
+
+    protected override async Task OnInitializedAsync()
     {
         _userSettings = UserProfileService.GetUserSettings();
         
-        _currencyCode = _userSettings.CurrencyCode;
+        _model.CurrencyCode = _userSettings.CurrencyCode;
+        
+        _categories = await MasterDataHelper.GetCategories();
     }
+    
+    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+        var file = e.File;
+
+        _model.ImageName = file.Name;
+        _model.Image = file;
+    }
+
+    private void Clear()
+    {
+        _model.ImageName = null;
+        _model.Image = null;
+    } 
 
     private async Task CreateProduct()
     {
-        if (_productPrice is null 
-            || _productCategory is null
-            || _productName is null
-            || _productDescription is null
-            || _currencyCode is null)
-        {
-            return;
-        }
+        await _form.Validate();
+        if (!_form.IsValid)
+		{
+			return;
+		}
+        
+        _processing = true;
         
         var newProduct = new CreateProductDto(
-            ProductId: Guid.NewGuid(), 
-            Name: _productName,
-            Description: _productDescription,
-            PricePerKg: new Price(_productPrice.Value, _currencyCode),
-                ImageUrl: null,
-                Category: _productCategory
-            );
+            Name: _model.Name,
+            Description: _model.Description,
+            PricePerKg: new Price(_model.PricePerKg, _model.CurrencyCode),
+            Image: await GetImage(),
+            Category: _model.Category
+        );
 
-        await ProductService.CreateProduct(newProduct);
-        
-        Snackbar.Add("Product created successfully", Severity.Success);
+        try
+        {
+            await ProductService.CreateProduct(newProduct);
 
-        NavigationManager.NavigateTo("/products");
+            Snackbar.Add("Product created successfully", Severity.Success);
+            NavigationManager.NavigateTo("/products");
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to create product", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
     }
+
+    private async Task<FileDto?> GetImage()
+    {
+        if (_model.Image is null)
+        {
+            return null;
+        }
+        
+        var imageData = await BrowserFileHelper.UploadMedia(_model.Image);
+        
+        return new FileDto(
+            FileName: _model.ImageName ?? Guid.NewGuid().ToString(),
+            Data: imageData
+        );
+    }
+    
+    private void SetDragClass() => _dragClass = $"{DefaultDragClass} mud-border-primary";
+    private void ClearDragClass() => _dragClass = DefaultDragClass;
 }

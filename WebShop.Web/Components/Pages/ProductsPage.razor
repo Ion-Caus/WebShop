@@ -1,7 +1,39 @@
 @page "/products"
+@using WebShop.Application.Services
+@using WebShop.Application.Dtos
+@inject IProductService ProductService
 
-
-
-@code {
+<MudContainer Class="pa-2">
+   
+<MudGrid>
   
+     <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+    
+
+    @foreach (var product in _products)
+    {
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardMedia Image="@product.ImageSrc"/>
+                    
+                    
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">@product.Name</MudText>
+                    <MudText>@product.Description</MudText>
+                    <MudText>Price: @product.PricePerKg.Value @product.PricePerKg.CurrencyCode</MudText>
+                    <MudText>Category: @product.Category.Name</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+</MudContainer>
+@code {
+    private IReadOnlyCollection<ProductDto> _products = Array.Empty<ProductDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await ProductService.GetProducts();
+        await Task.Delay(2000);
+    }
 }

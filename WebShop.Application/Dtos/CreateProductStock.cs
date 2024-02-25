@@ -1,4 +1,3 @@
 namespace WebShop.Application.Dtos;
 
-public record CreateProductStock(
-    );
+public record CreateProductStock();
