@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -71,8 +70,12 @@ public class WebShopDbContext : Microsoft.EntityFrameworkCore.DbContext
             });
         });
 
-        modelBuilder.Entity<ProductStock>()
-            .HasOne(ps => ps.Warehouse);
+        modelBuilder.Entity<ProductStock>(table =>
+        {
+            table.HasOne(x => x.Warehouse);
+            table.HasOne(x => x.Product);
+            table.Property(x => x.WeightInGrams).HasColumnName("Weight");
+        });
     }
     
     //public DbSet<Cart> Carts { get; set; }
@@ -82,7 +85,7 @@ public class WebShopDbContext : Microsoft.EntityFrameworkCore.DbContext
     //public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Image> Images { get; set; }
-    //public DbSet<ProductStock> ProductStocks { get; set; }
-    //public DbSet<Warehouse> Warehouses { get; set; }
+    public DbSet<ProductStock> ProductStocks { get; set; }
+    public DbSet<Warehouse> Warehouses { get; set; }
     
 }

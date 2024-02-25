@@ -13,4 +13,11 @@ public class MasterDataHelper(WebShopDbContext context) : IMasterDataHelper
         
         return categories.Select(c => c.ToDto()).ToList();
     }
+
+    public async Task<IReadOnlyCollection<WarehouseDto>> GetWarehouses()
+    {
+        var warehouses = await context.Warehouses.ToListAsync();
+        
+        return warehouses.Select(w => w.ToDto()).ToList();
+    }
 }

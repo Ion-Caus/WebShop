@@ -5,4 +5,5 @@ namespace WebShop.Application.Services;
 public interface IMasterDataHelper
 {
     Task<IReadOnlyCollection<CategoryDto>> GetCategories();
+    Task<IReadOnlyCollection<WarehouseDto>> GetWarehouses();
 }

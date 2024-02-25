@@ -27,6 +27,4 @@ public static class ProductExtensions
             return $"data:image/{format};base64,{base64}";
         }
     }
-    
-    
 }

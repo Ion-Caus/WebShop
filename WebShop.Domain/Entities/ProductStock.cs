@@ -2,10 +2,13 @@ namespace WebShop.Domain.Entities;
 
 public class ProductStock
 {
-    public ProductStock(DateTimeOffset expirationDate, decimal weightKg, Product product, Warehouse warehouse)
+    public ProductStock(DateTimeOffset expirationDate, decimal weightInGrams, Product product, Warehouse warehouse)
     {
-        WeightKg = weightKg;
+        WeightInGrams = weightInGrams;
         ExpirationDate = expirationDate;
+        ProductId = product.Id;
+        Product = product;
+        WarehouseId = warehouse.Id;
         Warehouse = warehouse;
     }
     
@@ -14,9 +17,9 @@ public class ProductStock
     public int Id { get; private set; }
     
     public int ProductId { get; set; }
-    //public Product Product { get; set; } = product;
+    public Product Product { get; set; }
 
-    public decimal WeightKg { get; set; }
+    public decimal WeightInGrams { get; set; }
     public DateTimeOffset ExpirationDate { get; set; }
     
     public int WarehouseId { get; set; }

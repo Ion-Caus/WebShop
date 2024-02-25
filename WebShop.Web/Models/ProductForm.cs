@@ -46,11 +46,14 @@ public class ProductFormFluentValidator : AbstractValidator<ProductForm>
     
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
     {
-        var result = await ValidateAsync(ValidationContext<ProductForm>.CreateWithOptions((ProductForm)model, x => x.IncludeProperties(propertyName)));
-        if (result.IsValid)
-        {
-            return Array.Empty<string>();
-        }
-        return result.Errors.Select(e => e.ErrorMessage);
+        var context = ValidationContext<ProductForm>.CreateWithOptions(
+            (ProductForm) model, 
+            x => x.IncludeProperties(propertyName));
+        
+        var result = await ValidateAsync(context);
+        
+        return result.IsValid 
+            ? Array.Empty<string>() 
+            : result.Errors.Select(e => e.ErrorMessage);
     };
 }

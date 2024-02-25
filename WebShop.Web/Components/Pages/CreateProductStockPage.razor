@@ -1,43 +1,127 @@
 @page "/add-product-stock/{productId:int}"
 
-@* @inject ProductService ProductService *@
-@* @inject ProductStockService ProductStockService *@
+@using WebShop.Web.Models
+@using WebShop.Application.Dtos
+@using WebShop.Application.Services
+@using WebShop.Web.Helpers
+
+@inject IProductService ProductService
+@inject IMasterDataHelper MasterDataHelper
+
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
 <PageTitle> Add product stock </PageTitle>
 
-<MudPage Title="Add Product Stock">
-    <MudForm>
-        <MudNumericField @bind-Value="_quantity" Min="1" Max="10" Label="Quantity" Required="true" />
-        <MudNumericField @bind-Value="_weightKg" Min="0" Label="Weight" Required="true" />
-        <MudDatePicker @bind-Date="_expirationDate" Label="Expiration Date" Required="true" />
+<MudCard>
+	<MudForm Model="@_model" @ref="@_form" Validation="@(_productStockValidator.ValidateValue)" ValidationDelay="0">
+		<MudCardContent>
+				<MudNumericField @bind-Value="_model.WeightInGrams"                              
+                                 For="@(() => _model.WeightInGrams)"
+                                 Variant="Variant.Outlined"
+                                 Immediate="true"
+                                 Step="100m"
+                                 Label="Weight in grams" />
+                
+                <MudDatePicker @bind-Date="_model.ExpirationDate"
+                               For="@(() => _model.ExpirationDate)"
+                               Variant="Variant.Outlined"
+                               DateFormat="dd MMM yyyy"
+                               Immediate="true"
+                               DisableToolbar="true"
+                               Label="Expiration date" />
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProductStock">Add Product Stock</MudButton>
-    </MudForm>
-</MudPage>
+                <MudSelect @bind-Value="_model.WarehouseId"
+                           For="@(() => _model.WarehouseId)" 
+                           Variant="Variant.Outlined"
+                           Immediate="true"
+                           Label="Warehouse">
+                    @foreach (var warehouse in _warehouses)
+                    {
+                        <MudSelectItem Value="@warehouse.Id">@warehouse.Name</MudSelectItem>
+                    }
+                </MudSelect>
+        </MudCardContent>
+	</MudForm>
+    <MudCardActions>
+         <MudButton Disabled="@_processing" OnClick="AddProductStock" Variant="Variant.Filled" Color="Color.Primary">
+            @if (_processing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Add stock</MudText>
+            }
+        </MudButton>
+    </MudCardActions>
+</MudCard>
 
 @code {
     [Parameter]
     public int ProductId { get; set; }
 
-    private int _quantity = 1;
-    private decimal? _weightKg;
-    private DateTime? _expirationDate = DateTime.Today;
+    private ProductDto? _product;
+    
+    private readonly ProductStockForm _model = new();
+    private readonly ProductStockFormFluentValidator _productStockValidator = new();
+
+    private MudForm _form = null!;
+
+    private bool _processing;
+
+    private IReadOnlyCollection<WarehouseDto> _warehouses = Array.Empty<WarehouseDto>();
 
     protected override async Task OnInitializedAsync()
     {
-        //var product = await ProductService.GetProductByIdAsync(ProductId);
-    }
+        _warehouses = await MasterDataHelper.GetWarehouses();
+        
+        _product = await ProductService.GetProduct(ProductId);
+        if (_product is null)
+        {
+            Snackbar.Add("Product not found", Severity.Error);
+            NavigationManager.NavigateTo("/products");
+            return;
+        }
 
+        _model.ProductId = _product.Id;
+        _model.WarehouseId = _warehouses.First().Id;
+    }
+    
     private async Task AddProductStock()
     {
-        //var newProductStock = new ProductStock(_expirationDate, _weightKg, /* other properties */, productId);
-
-        //await ProductStockService.AddProductStockAsync(newProductStock);
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
         
-        Snackbar.Add("Product stock added successfully", Severity.Success);
- 
-        NavigationManager.NavigateTo("/products");
+        _processing = true;
+        
+        var expirationDate = _model.ExpirationDate!.Value.Date.ToDateTimeOffset();
+        
+        var newStock = new CreateProductStockDto(
+            ProductId: ProductId,
+            WeightInGrams: _model.WeightInGrams,
+            WarehouseId: _model.WarehouseId,
+            ExpirationDate: expirationDate);
+
+        try
+        {
+            await ProductService.AddStock(newStock);
+
+            Snackbar.Add("Product stock added successfully", Severity.Success);
+            NavigationManager.NavigateTo("/products");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Snackbar.Add("Failed to add new product stock", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
     }
 }

@@ -27,4 +27,8 @@
       <ProjectReference Include="..\WebShop.Database\WebShop.Database.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Components\Components\" />
+    </ItemGroup>
+
 </Project>
